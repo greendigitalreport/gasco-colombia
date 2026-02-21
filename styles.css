@@ -1,0 +1,171 @@
+html {
+    scroll-behavior: smooth;
+}
+
+/* 4. Indicador de lectura superior */
+#reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0090A8, #10b981);
+    z-index: 1000;
+    width: 0%;
+    transition: width 0.1s ease;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    transition: all 0.3s ease;
+}
+
+.fill-icon {
+    font-variation-settings: 'FILL' 1;
+}
+
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 144, 168, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.dark .stat-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    border-color: rgba(0, 144, 168, 0.3);
+}
+
+/* 2. Efecto de Brillo (Glint) */
+@keyframes glint {
+    0% {
+        transform: translateX(-150%) skewX(-25deg);
+    }
+
+    50% {
+        transform: translateX(150%) skewX(-25deg);
+    }
+
+    100% {
+        transform: translateX(150%) skewX(-25deg);
+    }
+}
+
+.glint-effect::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(to right,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
+    animation: glint 5s infinite ease-in-out;
+    pointer-events: none;
+}
+
+/* 1. Scroll Spy Mejorado: Clases de resaltado */
+.nav-link.active-section {
+    background: rgba(0, 144, 168, 0.1);
+    color: #0090A8 !important;
+    box-shadow: inset 4px 0 0 #0090A8;
+}
+
+.dark .nav-link.active-section {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981 !important;
+    box-shadow: inset 4px 0 0 #10b981;
+}
+
+/* 6. Botón Volver Arriba */
+#back-to-top {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+#back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 3. Estilos de Modales */
+#details-modal {
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+/* --- NUEVAS ANIMACIONES DE NAVEGACIÓN --- */
+.nav-link {
+    position: relative;
+    z-index: 10;
+}
+
+#nav-indicator {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    height: 44px;
+    background: rgba(0, 144, 168, 0.05);
+    border-radius: 12px;
+    z-index: 0;
+    transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+    pointer-events: none;
+    opacity: 0;
+}
+
+.nav-link:hover .material-symbols-outlined {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.report-cover-preview {
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    box-shadow: 10px 10px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.report-cover-preview:hover {
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+.dark ::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #0f1712;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #2d3a31;
+    border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #0090A8;
+}
+
+#welcome-overlay {
+    backdrop-filter: blur(12px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#welcome-modal {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-scale-down {
+    transform: scale(0.9);
+}
