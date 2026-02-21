@@ -1,4 +1,3 @@
-
 // --- CONSTANTES Y ESTADO ---
 const mainContainer = document.getElementById('main-container');
 const progressBar = document.getElementById('reading-progress-bar');
@@ -387,4 +386,158 @@ function triggerHaptic() {
     if (window.navigator && window.navigator.vibrate) {
         window.navigator.vibrate(10);
     }
+}
+
+// --- LÓGICA DEL FLIPBOOK (Informe Ejecutivo) ---
+let pageFlip = null;
+const reportBtn = document.getElementById('report-btn');
+const flipbookModal = document.getElementById('flipbook-modal');
+const flipbookClose = document.getElementById('flipbook-close');
+const flipbookContainer = document.getElementById('flipbook-container');
+const flipbookLoader = document.getElementById('flipbook-loader');
+const flipbookControls = document.getElementById('flipbook-controls');
+const pageTurnSound = document.getElementById('page-turn-sound');
+
+if (reportBtn) {
+    reportBtn.addEventListener('click', async () => {
+        triggerHaptic();
+        flipbookModal.classList.remove('hidden');
+        flipbookModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+
+        if (!pageFlip) {
+            await loadReport();
+        }
+    });
+}
+
+if (flipbookClose) {
+    flipbookClose.addEventListener('click', () => {
+        flipbookModal.classList.add('hidden');
+        flipbookModal.classList.remove('flex');
+        document.body.style.overflow = '';
+    });
+}
+
+async function loadReport() {
+    // Configurar el worker de pdf.js
+    if (pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    const pdfPath = 'Informe_pdf/Resumen_Ejecutivo_Gasco.pdf';
+    console.log('Iniciando carga optimizada del PDF...');
+
+    try {
+        const loadingTask = pdfjsLib.getDocument(pdfPath);
+        const pdf = await loadingTask.promise;
+        const totalPages = pdf.numPages;
+        const flipbookEl = document.getElementById('flipbook');
+        flipbookEl.innerHTML = '';
+
+        // Función para renderizar una página específica
+        const renderPage = async (num) => {
+            const page = await pdf.getPage(num);
+            // Reducimos escala a 1.2 para equilibrio entre nitidez y velocidad
+            const viewport = page.getViewport({ scale: 1.2 });
+
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'flipbook-page';
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({ canvasContext: context, viewport }).promise;
+            pageDiv.appendChild(canvas);
+            return pageDiv;
+        };
+
+        // 1. Renderizar solo las primeras 2 páginas para iniciar rápido
+        console.log('Cargando primeras páginas...');
+        for (let i = 1; i <= Math.min(2, totalPages); i++) {
+            const pageEl = await renderPage(i);
+            flipbookEl.appendChild(pageEl);
+        }
+
+        // Inicializar Flipbook con las primeras páginas
+        initPageFlip();
+
+        // Actualizar UI básicp
+        if (flipbookLoader) flipbookLoader.classList.add('hidden');
+        if (flipbookContainer) flipbookContainer.classList.remove('opacity-0');
+        if (flipbookControls) flipbookControls.classList.remove('hidden');
+        const pageNumEl = document.getElementById('flipbook-page-num');
+        if (pageNumEl) pageNumEl.innerText = `1 / ${totalPages}`;
+
+        // 2. Cargar el resto en segundo plano
+        if (totalPages > 2) {
+            console.log('Cargando resto del documento en segundo plano...');
+            for (let i = 3; i <= totalPages; i++) {
+                const pageEl = await renderPage(i);
+                flipbookEl.appendChild(pageEl);
+            }
+            // Actualizar el flipbook con las nuevas páginas
+            pageFlip.updateFromHtml(document.querySelectorAll('.flipbook-page'));
+            console.log('Documento completo cargado.');
+        }
+
+    } catch (error) {
+        console.error('Error detallado de PDF.js:', error);
+        let errorMsg = 'No se pudo cargar el informe ejecutivo.';
+        if (window.location.protocol === 'file:') {
+            errorMsg += '\n\nSugerencia: Usa un servidor local (Live Server / Python) para evitar bloqueos de seguridad del navegador.';
+        } else {
+            errorMsg += '\n\nPor favor, verifica que el archivo "Informe_pdf/Resumen_Ejecutivo_Gasco.pdf" exista en la carpeta del proyecto.';
+        }
+        alert(errorMsg);
+        if (flipbookModal) {
+            flipbookModal.classList.add('hidden');
+            flipbookModal.classList.remove('flex');
+        }
+        document.body.style.overflow = '';
+    }
+}
+
+function initPageFlip() {
+    const flipContainer = document.getElementById('flipbook');
+    if (!flipContainer) return;
+
+    // Detectar si es móvil para ajustar el tamaño inicial
+    const isMobile = window.innerWidth < 768;
+
+    pageFlip = new St.PageFlip(flipContainer, {
+        width: 595,
+        height: 842,
+        size: "stretch",
+        minWidth: 315,
+        maxWidth: 1000,
+        minHeight: 420,
+        maxHeight: 1350,
+        maxShadowOpacity: 0.5,
+        showCover: true,
+        mobileScrollSupport: false,
+        usePortrait: isMobile // Usar modo retrato en móvil
+    });
+
+    pageFlip.loadFromHTML(document.querySelectorAll('.flipbook-page'));
+
+    pageFlip.on('flip', (e) => {
+        const totalPages = pageFlip.getPageCount();
+        const pageNumEl = document.getElementById('flipbook-page-num');
+        if (pageNumEl) {
+            pageNumEl.innerText = `${e.data + 1} / ${totalPages}`;
+        }
+
+        if (pageTurnSound) {
+            pageTurnSound.currentTime = 0;
+            pageTurnSound.play().catch(() => { });
+        }
+    });
+
+    const prevBtn = document.getElementById('flipbook-prev');
+    const nextBtn = document.getElementById('flipbook-next');
+    if (prevBtn) prevBtn.onclick = () => pageFlip.flipPrev();
+    if (nextBtn) nextBtn.onclick = () => pageFlip.flipNext();
 }
